@@ -1,0 +1,8 @@
+{
+  "detail-type": ["Translate TextTranslationJob State Change"],
+  "source": ["aws.translate"],
+  "account": ["<enter account id>"],
+  "detail": {
+    "jobStatus": ["COMPLETED", "FAILED"]
+  }
+}

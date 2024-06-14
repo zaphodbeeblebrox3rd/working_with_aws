@@ -1,0 +1,109 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "TranscribeTranslateAccessStatement",
+            "Effect": "Allow",
+            "Action": [
+                "transcribe:*",
+                "polly:*",
+                "translate:*",
+                "comprehend:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "TranscribeS3BucketVisibility",
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListAllMyBuckets",
+                "s3:GetBucketTagging",
+                "s3:GetObjectTagging"
+            ],
+            "Resource": "arn:aws:s3:::*"
+        },
+        {
+            "Sid": "TranscribeS3AccessStatement",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:ListBucket",
+                "s3:GetBucketLocation",
+                "s3:PutEncryptionConfiguration",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:GetObjectVersion",
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey"
+            ],
+            "Resource": "arn:aws:s3:::<enter bucket name>"
+        },
+        {
+            "Sid": "TranscribeLoggingAccessStatement",
+            "Effect": "Allow",
+            "Action": [
+                "cloudwatch:Describe*",
+                "cloudwatch:Get*",
+                "cloudwatch:List*",
+                "logs:Get*",
+                "logs:Describe*",
+                "logs:List*",
+                "cloudtrail:DescribeTrails",
+                "cloudtrail:List*",
+                "cloudtrail:LookupEvents",
+                "cloudtrail:Get*",
+                "aws-portal:ViewBilling",
+                "aws-portal:ViewUsage",
+                "aws-portal:ViewAccount",
+                "cur:DescribeReportDefinitions",
+                "budgets:ViewBudget",
+                "ce:GetCostAndUsage",
+                "ce:GetCostForecast",
+                "securityhub:DescribeActionTargets",
+                "securityhub:DescribeHub",
+                "securityhub:DescribeProducts",
+                "securityhub:DescribeStandards",
+                "securityhub:DescribeStandardsControls",
+                "securityhub:GetEnabledStandards",
+                "securityhub:GetFindings",
+                "securityhub:GetInsights",
+                "securityhub:GetInvitationsCount",
+                "securityhub:GetMasterAccount",
+                "securityhub:GetMembers",
+                "securityhub:ListEnabledProductsForImport",
+                "securityhub:ListInvitations",
+                "securityhub:ListMembers",
+                "securityhub:ListTagsForResource",
+                "iam:ListRoles"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "TranscribeManualEdition",
+            "Effect": "Deny",
+            "Action": [
+                "s3:PutObjectTagging",
+                "s3:DeleteObjectTagging"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "TranscribeDenyServiceControlledS3",
+            "Effect": "Deny",
+            "Action": [
+                "transcribe:StartTranscriptionJob",
+                "translate:StartTextTranslationJob"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "s3:ResourceTag/TranscriptionControlled": "true",
+                    "s3:ResourceTag/TranslationControlled": "true"
+                }
+            }
+        }
+    ]
+}

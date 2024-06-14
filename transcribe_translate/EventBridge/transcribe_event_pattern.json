@@ -1,0 +1,9 @@
+{
+    "detail-type": "Transcribe Job State Change",
+    "source": "aws.transcribe",
+    "account": "<enter account id>",
+    "resources": [],
+    "detail": {
+      "TranscriptionJobStatus": "COMPLETED"
+    }
+  }

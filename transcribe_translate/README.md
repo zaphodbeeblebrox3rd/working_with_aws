@@ -9,6 +9,8 @@ In summary, there are two important elements.  Firstly, access to S3 and other s
 
 IAM policies needed to be defined for each project team to ensure that each team could only see their own data.  Then, EventBridge was utilized to trigger a Lambda function for tagging each job with an Owner tag that my organization uses for showback billing. 
 
+## Important Note
+Resource Tagging is not currently a property of Translate Jobs.  I think it is quite reasonable to allow this and I am clueless as to why this is.  https://docs.aws.amazon.com/translate/latest/APIReference/API_TextTranslationJobProperties.html
 
 ## Prerequisites
 
@@ -24,8 +26,8 @@ IAM policies needed to be defined for each project team to ensure that each team
 3. Create the Lambda function for tagging Transcribe resources.  Use the tag_transcribe_job.py file as a guide.  Attach the IAM role from the previous step.
 4. Set up EventBridge to trigger the Lambda function on transcription job completion events.  Use the transcribe_event_pattern.json file as a guide.  NOTE: this also requires specifying the account ID in the event pattern. 
 
-### Translate
-1. Assuming that you have already set up your IAM roles and policies for Transcribe, you can use the S3 buckets and IAM policies you already created.
+### Translate - NOT YET SUPPORTED BY AWS
+1. Assuming that you have already set up your IAM roles and policies for Transcribe, you will theoretically use the S3 buckets and IAM policies you already created.
 2. Create the Lambda function for tagging Translate resources.  Use the tag_translate_job.py file as a guide.  Use the same IAM role you attached to the Transcribe Lambda function. Don't forget to insert your own AWS Account ID into the Lambda function code.
 3. Set up EventBridge to trigger the Lambda function on translation job completion events.  Use the translate_event_pattern.json file as a guide.  NOTE: this also requires specifying the account ID in the event pattern. 
 

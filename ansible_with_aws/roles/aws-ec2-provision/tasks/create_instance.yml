@@ -1,0 +1,113 @@
+---
+- name: Check if EC2 instance exists
+  amazon.aws.ec2_instance_info:
+    filters:
+      "tag:Name": "{{ item.aws_instance_name }}"
+    region: "{{ item.aws_region }}"
+  register: ec2_instances
+  tags: provision
+
+- name: Set up AWS EC2 instance
+  amazon.aws.ec2_instance:
+    key_name: "{{ item.aws_key_pair_name }}"
+    security_group: "{{ item.aws_security_group }}"
+    instance_type: "{{ item.aws_instance_type }}"
+    image_id: "{{ item.aws_ami_id }}"
+    wait: true
+    region: "{{ item.aws_region }}"
+    network:
+      subnets:
+        - "{{ item.aws_subnet }}"
+      assign_public_ip: "{{ item.aws_public_ip }}"
+    vpc_subnet_id: "{{ item.aws_vpc_subnet_id }}"
+    tags:
+      Name: "{{ item.aws_instance_name }}"
+  register: ec2
+  when: ec2_instances.instances|length == 0
+  tags: provision
+    
+- name: Display hostname
+  debug:
+    msg: "The instance name: {{ item.aws_instance_name }}"
+  tags: provision
+
+- name: Display EC2 instance metadata, including IP addresses, and tags showing ownership
+  debug:
+    msg: "Instance ID: {{ tagged_instance.instance_id }}, Tags: {{ tagged_instance.tags }}"
+  loop: "{{ ec2_instances.instances }}"
+  loop_control:
+    loop_var: tagged_instance
+  tags: provision
+
+- name: Get information about all Elastic IPs
+  amazon.aws.ec2_eip_info:
+    region: "{{ item.aws_region }}"
+  register: eip_info
+  tags: provision
+
+- name: Check if an Elastic IP with the name was already allocated
+  set_fact:
+    eip_exists: "{{ item.aws_instance_name in (eip_info.addresses | map(attribute='tags.Name') | list) }}"
+  tags: provision
+
+- name: Debug eip_exists var
+  debug:
+    msg: "{{ eip_exists }}"
+  tags: provision
+
+- name: If it exists, assign the preallocated Elastic IP to a var for the following task
+  set_fact:
+    matching_eip: "{{ matching.public_ip}}"
+  loop: "{{ eip_info.addresses }}"
+  loop_control:
+    loop_var: matching
+  when: matching.tags.Name == item.aws_instance_name
+  tags: provision
+
+- name: Associate the preexisting Elastic IP if it is known
+  amazon.aws.ec2_eip:
+    state: present
+    region: "{{ item.aws_region }}"
+    device_id: "{{ ec2_instances.instances[0].instance_id }}"
+    public_ip: "{{ matching_eip }}"
+  when: eip_exists
+  ignore_errors: true
+  tags: provision
+
+- name: Allocate a new elastic IP if needed
+  amazon.aws.ec2_eip:
+    state: present
+    region: "{{ item.aws_region }}"
+    device_id: "{{ identified_instance.instance_id }}"
+    tags:
+      Name: "{{ item.aws_instance_name }}"
+  loop: "{{ ec2_instances.instances }}"
+  loop_control:
+    loop_var: identified_instance
+  no_log: true
+  tags: provision    
+  register: eip
+  when: item.aws_elastic_ip is defined and item.aws_elastic_ip and not eip_exists
+  tags: provision
+
+- name: Associate a newly created Elastic IP with the EC2 instance
+  amazon.aws.ec2_eip:
+    region: "{{ item.aws_region }}"
+    instance_id: "{{ item.aws_instance_id }}"
+    public_ip: "{{ eip.public_ip }}"
+  when: eip is defined and eip.public_ip is defined and item.aws_elastic_ip is defined and item.aws_elastic_ip and not eip_exists
+  tags: provision
+
+- name: Re-read public IP from the instance
+  shell: >
+    aws ec2 describe-instances --region "{{ item.aws_region }}" --instance-ids {{ networked_instance.instance_id }} --query 'Reservations[*].Instances[*].PublicIpAddress' --output text
+  loop: "{{ ec2_instances.instances}}"
+  loop_control:
+    loop_var: networked_instance
+  register: public_ips
+  tags: provision
+
+- name: Display hostname again, for easier reading of the hostname/IP association
+  debug:
+    msg: "The instance name: {{ item.aws_instance_name }}"
+  tags: provision

@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - vars/aws_credentials.yml
+  vars:
+    - aws_account_id: <account_id>
+    - cloudformation_template_path: files/<cf_template_path>
+    - cloudformation_stack_name: <stack_name>
+    - cloudformation_parameters:
+        - ParameterKey: VPCId
+          ParameterValue: <vpc_id>
+        - ParameterKey: Subnets
+          ParameterValue: <subnet1>,<subnet2>
+  roles: 
+    - aws-cloudformation-deploy

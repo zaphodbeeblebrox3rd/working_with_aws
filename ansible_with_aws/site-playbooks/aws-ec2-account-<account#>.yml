@@ -1,0 +1,42 @@
+---
+- name: Create AWS Security Groups
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - vars/aws_security_groups_<account#>.yaml
+    - vars/aws_credentials.yml
+  vars:
+    aws_account_id: <account#>
+  tasks:
+    - name: Set AWS credentials and region for session
+      set_fact:
+        aws_access_key: "{{ aws_accounts[aws_account_id]['aws_access_key_id'] }}"
+        aws_secret_key: "{{ aws_accounts[aws_account_id]['aws_secret_access_key'] }}"
+        aws_region: "{{ aws_accounts[aws_account_id]['region'] }}"
+
+    - name: Configure AWS credentials
+      shell: |
+        aws configure set aws_access_key_id "{{ aws_access_key }}" &&
+        aws configure set aws_secret_access_key "{{ aws_secret_key }}" &&
+        aws configure set default.region "{{ aws_region }}"
+
+    - name: Create security group
+      amazon.aws.ec2_group:
+        name: "{{ item.security_group_name }}"
+        description: "{{ item.security_group_name }}"
+        vpc_id: "{{ item.vpc_id }}"
+        region: "{{ item.region }}"
+        rules: "{{ item.rules }}"
+        rules_egress: "{{ item.rules_egress }}"
+      loop: "{{ aws_security_groups }}"
+      
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - vars/aws_ec2_<account#>.yaml
+  tasks:
+    - name: loop through role for each ec2 inventory item in the dictionary
+      include_role:
+        name: aws-ec2-provision
+      loop: "{{ ec2_instance }}"
+

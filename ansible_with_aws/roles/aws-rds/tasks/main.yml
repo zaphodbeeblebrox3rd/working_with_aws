@@ -1,0 +1,6 @@
+---
+- import_tasks: validate_credentials.yml
+
+- import_tasks: create_instance.yml
+  tags: create
+

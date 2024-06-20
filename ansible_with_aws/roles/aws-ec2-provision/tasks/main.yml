@@ -1,0 +1,7 @@
+---
+- import_tasks: validate_credentials.yml
+  tags: provision
+
+- import_tasks: create_instance.yml
+  tags: provision
+

@@ -1,0 +1,27 @@
+---
+ec2_instance:
+  - aws_instance_name: <instance_name>
+    aws_region: <region>
+    aws_availability_zone: <availability_zone>
+    aws_key_pair_name: <key_pair_name>
+    aws_owner: <owner>
+    aws_instance_type: <instance_type>
+    aws_security_group: <security_group>
+    aws_subnet: <subnet>
+    aws_ami_id: <ami_id>
+    aws_vpc_subnet_id: <vpc_subnet_id>
+    aws_elastic_ip: <elastic_ip>
+    aws_public_ip: <public_ip>
+  - aws_instance_name: <instance_name>
+    aws_region: <region>
+    aws_availability_zone: <availability_zone>
+    aws_key_pair_name: <key_pair_name>
+    aws_owner: <owner>
+    aws_instance_type: <instance_type>
+    aws_security_group: <security_group>
+    aws_subnet: <subnet>
+    aws_ami_id: <ami_id>
+    aws_vpc_subnet_id: <vpc_subnet_id>
+    aws_elastic_ip: <elastic_ip>
+    aws_public_ip: <public_ip>
+  

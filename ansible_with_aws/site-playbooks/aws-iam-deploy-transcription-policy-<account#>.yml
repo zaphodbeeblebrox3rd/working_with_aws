@@ -1,0 +1,21 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - vars/aws_credentials.yml
+  vars:
+    - aws_account_id: <account_id>
+  tasks:
+    - name: Find IAM policy JSON files
+      ansible.builtin.find:
+        paths: aws-iam-policies
+        patterns: 'Transcription*'
+      register: json_files
+
+    - name: Deploy each IAM policy
+      include_role:
+        name: aws-iam-policy
+      loop: "{{ json_files.files }}"
+      loop_control:
+        loop_var: policy_file
+      

@@ -1,0 +1,25 @@
+---
+rds_instance:
+  - aws_rds_cluster_identifier: <cluster_identifier>
+    aws_region: <region>
+    aws_availability_zone: <availability_zone>
+    aws_owner: <owner>
+    aws_copy_tags_to_snapshot: <copy_tags_to_snapshot>
+    aws_rds_engine: <engine>
+    aws_rds_engine_mode: serverless
+    aws_rds_engine_version: 15.2
+    aws_rds_auto_minor_version_upgrade: yes
+    aws_rds_cluster_storage: io1 
+    aws_rds_port: 5432
+    aws_rds_master_username: postgres
+    aws_rds_master_user_password: <master_user_password>
+    aws_rds_database_name: <database_name>
+    aws_vpc_security_group: <vpc_security_group>
+    aws_rds_backup_retention_period: 10
+    aws_rds_storage_encrypted: yes
+    aws_rds_kms_key_id: <kms_key_id>
+    aws_rds_scaling_auto_pause: True
+    aws_rds_max_capacity: 16
+    aws_rds_min_capacity: 2
+      
+    

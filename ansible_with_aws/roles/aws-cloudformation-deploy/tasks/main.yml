@@ -1,0 +1,8 @@
+---
+- import_tasks: aws_authenticate.yml
+
+- import_tasks: validate_credentials.yml
+
+- import_tasks: aws_cloudformation_deploy.yml
+
+

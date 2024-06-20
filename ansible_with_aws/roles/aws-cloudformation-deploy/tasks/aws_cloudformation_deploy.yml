@@ -1,0 +1,29 @@
+---
+- name: Display the Cloudformation stack name
+  debug:
+    msg: "{{ cloudformation_stack_name }}"
+
+- name: Display the current working directory
+  shell: pwd
+
+- name: Detect if the stack exists
+  shell: aws cloudformation describe-stacks --stack-name {{ cloudformation_stack_name }} --region "{{ aws_accounts[aws_account_id]['region'] }}"
+  register: stack_exists
+  failed_when: stack_exists.rc != 0 or "does not exist" in stack_exists.stdout
+  ignore_errors: true
+
+- name: Deploy the Cloudformation stack
+  shell: |
+    aws cloudformation deploy \
+    --template-file {{ cloudformation_template_path }} \
+    --stack-name {{ cloudformation_stack_name }} \
+    --region "{{ aws_accounts[aws_account_id]['region'] }}"
+  when: stack_exists.failed
+
+- name: Update the Cloudformation stack
+  shell: |
+    aws cloudformation update-stack \
+    --template-body file://{{ cloudformation_template_path }} \
+    --stack-name {{ cloudformation_stack_name }} \
+    --region "{{ aws_accounts[aws_account_id]['region'] }}"
+  when: not stack_exists.failed

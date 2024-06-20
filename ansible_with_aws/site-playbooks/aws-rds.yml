@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - aws_rds.yaml
+  tasks:
+    - name: debug imported vars
+      debug: 
+        msg: "{{ rds_instance }}"
+    - name: loop through role for each rds inventory item in the dictionary
+      include_role:
+        name: aws-rds
+      loop: "{{ rds_instance }}"
+      

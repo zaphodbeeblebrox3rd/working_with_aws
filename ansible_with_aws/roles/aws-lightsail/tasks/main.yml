@@ -1,0 +1,8 @@
+---
+- import_tasks: validate_credentials.yml
+
+- import_tasks: create_instance.yml
+  tags: create
+
+- import_tasks: configure_networking.yml
+  tags: create

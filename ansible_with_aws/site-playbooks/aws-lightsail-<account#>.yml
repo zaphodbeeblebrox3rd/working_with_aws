@@ -1,0 +1,34 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - vars/aws_lightsail_<account#>.yaml
+    - vars/aws_credentials.yml
+  vars:
+    aws_account_id: <account_id>
+  tasks:
+    - name: Set AWS credentials and region for session
+      set_fact:
+        aws_access_key: "{{ aws_accounts[aws_account_id]['aws_access_key_id'] }}"
+        aws_secret_key: "{{ aws_accounts[aws_account_id]['aws_secret_access_key'] }}"
+        aws_region: "{{ aws_accounts[aws_account_id]['region'] }}"
+
+    - name: Configure AWS credentials
+      shell: |
+        aws configure set aws_access_key_id "{{ aws_access_key }}" &&
+        aws configure set aws_secret_access_key "{{ aws_secret_key }}" &&
+        aws configure set default.region "{{ aws_region }}"
+
+    - name: Debug imported vars
+      debug: 
+        msg: "{{ lightsail_instance }}"
+
+    - name: Loop through role for each lightsail inventory item in the dictionary
+      include_role:
+        name: aws-lightsail
+      loop: "{{ lightsail_instance }}"
+
+    - name: Show the IP address of the new Lightsail instance
+      include_tasks: get_lightsail_ip.yml      
+      loop: "{{ lightsail_instance }}"
+      

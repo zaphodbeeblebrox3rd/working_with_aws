@@ -1,0 +1,20 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowTaggingAllResources",
+            "Effect": "Allow",
+            "Action": [
+                "tag:*",
+                "ec2:CreateTags",
+                "s3:PutBucketTagging",
+                "lambda:TagResource",
+                "transcribe:TagResource",
+                "transcribe:GetTranscriptionJob",
+                "translate:TagResource",
+                "comprehend:TagResource"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+---
+- name: Create Aurora Serverless DB cluster
+  amazon.aws.rds_cluster:
+    db_cluster_identifier: "{{ item.aws_rds_cluster_identifier }}"
+    db_cluster_instance_class: db.t3
+    region: "{{ item.aws_region }}"
+    availability_zones: "{{ item.aws_availability_zone }}"
+    tags:
+      Owner: "{{ item.aws_owner }}"
+    copy_tags_to_snapshot: "{{ item.aws_copy_tags_to_snapshot }}"
+    engine: "{{ item.aws_rds_engine }}"
+    # engine_mode: "{{ item.aws_rds_engine_mode }}"
+    engine_version: "{{ item.aws_rds_engine_version }}"
+    storage_type: "{{ item.aws_rds_cluster_storage }}"
+    port: "{{ item.aws_rds_port }}"
+    master_username: "{{ item.aws_rds_master_username }}"
+    master_user_password: "{{ item.aws_rds_master_user_password }}"
+    database_name: "{{ item.aws_rds_database_name }}"
+    vpc_security_group_ids:
+      - "{{ item.aws_vpc_security_group }}"
+    backup_retention_period: "{{ item.aws_rds_backup_retention_period }}"
+    storage_encrypted: "{{ item.aws_rds_storage_encrypted }}"
+    kms_key_id: "{{ item.aws_rds_kms_key_id }}"
+  register: cluster_result
+
+- name: Print cluster details
+  debug:
+    var: cluster_result
+

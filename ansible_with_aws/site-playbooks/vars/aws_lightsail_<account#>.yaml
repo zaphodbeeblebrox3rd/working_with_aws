@@ -1,0 +1,50 @@
+---
+lightsail_instance:
+  - aws_instance_name: <instance_name>
+    aws_region: <region>
+    aws_availability_zone: <availability_zone>
+    lightsail_snapshot_name: <snapshot_name>
+    aws_key_pair_name: <key_pair_name>
+    aws_owner: <owner>
+    aws_bundle_id: <bundle_id>
+    aws_blueprint_id: <blueprint_id>
+    aws_http_allowed_networks: <http_allowed_networks>
+    aws_https_allowed_networks: <https_allowed_networks>
+    aws_other_port: <other_port>
+    aws_ssh_allowed_networks:
+      - <ssh_allowed_network1>
+      - <ssh_allowed_network2>
+      - <ssh_allowed_network3>
+      - <ssh_allowed_network4>
+  - aws_instance_name: <instance_name>
+    aws_region: <region>
+    aws_availability_zone: <availability_zone>
+    lightsail_snapshot_name: <snapshot_name>
+    aws_key_pair_name: <key_pair_name>
+    aws_owner: <owner>
+    aws_bundle_id: <bundle_id>
+    aws_blueprint_id: <blueprint_id>
+    aws_http_allowed_networks: 0.0.0.0/0
+    aws_https_allowed_networks: 0.0.0.0/0
+    aws_other_port: <other_port>
+    aws_ssh_allowed_networks:
+      - <ssh_allowed_network1>
+      - <ssh_allowed_network2>
+      - <ssh_allowed_network3>
+      - <ssh_allowed_network4>
+  - aws_instance_name: <instance_name>
+    aws_region: <region>
+    aws_availability_zone: <availability_zone>
+    lightsail_snapshot_name: <snapshot_name>
+    aws_key_pair_name: <key_pair_name>
+    aws_owner: <owner>
+    aws_bundle_id: <bundle_id>
+    aws_http_allowed_networks: 0.0.0.0/0
+    aws_blueprint_id: lamp_8_bitnami
+    aws_http_allowed_networks: 0.0.0.0/0
+    aws_https_allowed_networks: 0.0.0.0/0
+    aws_ssh_allowed_networks:
+      - <ssh_allowed_network1>
+      - <ssh_allowed_network2>
+      - <ssh_allowed_network3>
+      - <ssh_allowed_network4>

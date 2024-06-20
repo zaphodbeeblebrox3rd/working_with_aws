@@ -1,0 +1,2 @@
+---
+#root_password: "{{ lookup('password', '/etc/ansible/passwords/{{ inventory_hostname }}.root chars=ascii_letters,digits,hexdigits length=13') }}"

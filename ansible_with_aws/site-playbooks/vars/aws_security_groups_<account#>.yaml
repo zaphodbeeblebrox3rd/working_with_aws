@@ -1,0 +1,58 @@
+---
+aws_security_groups:
+  - security_group_name: <security_group_name>
+    vpc_id: <vpc_id>
+    region: <region>
+    rules:
+      - proto: tcp
+        ports:
+          - 80
+          - 443
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        ports:
+          - 22
+        cidr_ip: 
+          - <cidr_ip1>
+          - <cidr_ip2>
+          - <cidr_ip3>
+          - <cidr_ip4>
+      - proto: icmp
+        ports:
+          - -1
+        cidr_ip: 
+          - <cidr_ip1>
+          - <cidr_ip2>
+          - <cidr_ip3>
+          - <cidr_ip4>
+    rules_egress:
+      - proto: all
+        cidr_ip: 0.0.0.0/0
+  - security_group_name: <security_group_name>
+    vpc_id: <vpc_id>
+    region: <region>
+    rules:
+      - proto: tcp
+        ports:
+          - 80
+          - 443
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        ports:
+          - 22
+        cidr_ip: 
+          - <cidr_ip1>
+          - <cidr_ip2>
+          - <cidr_ip3>
+          - <cidr_ip4>
+      - proto: icmp
+        ports:
+          - -1
+        cidr_ip: 
+          - <cidr_ip1>
+          - <cidr_ip2>
+          - <cidr_ip3>
+          - <cidr_ip4>
+    rules_egress:
+      - proto: all
+        cidr_ip: 0.0.0.0/0

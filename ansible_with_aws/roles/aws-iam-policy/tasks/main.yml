@@ -1,0 +1,100 @@
+---
+- import_tasks: aws_authenticate.yml
+
+- name: validate AWS credentials
+  import_tasks: validate_credentials.yml
+
+- name: Display policy_file path
+  ansible.builtin.debug:
+    msg: "{{ policy_file.path }}"
+
+- name: Read IAM Policy JSON file
+  ansible.builtin.slurp:
+    src: "{{ playbook_dir }}/{{ policy_file.path }}"
+  register: policy_json
+
+# This conversion to a string is not being accepted by the aws cli
+# - name: Convert IAM Policy to a string
+#   ansible.builtin.set_fact:
+#     iam_policy_json: "{{ policy_json['content'] | b64decode }}"
+
+- name: Convert IAM Policy to a JSON string
+  ansible.builtin.set_fact:
+    iam_policy_json: "{{ policy_json['content'] | b64decode | from_json | to_json }}"
+
+- name: Display iam_policy_json
+  ansible.builtin.debug:
+    msg: "{{ iam_policy_json }}"
+
+# - name: Create an IAM group to which the new policy will be associated
+#   community.aws.iam_group:
+#     name: "{{ policy_file.path | regex_replace('^.*/|\\.json$', '') }}-group"
+#     state: present
+#   register: iam_group
+
+# - name: Display iam_group
+#   ansible.builtin.debug:
+#     msg: "{{ iam_group }}"
+
+# - name: Create or update IAM Policy
+#   community.aws.iam_policy:
+#     policy_name: "{{ policy_file.path | regex_replace('^.*/|\\.json$', '') }}"
+#     policy_json: "{{ iam_policy_json }}"
+#     state: present
+#     iam_type: policy
+#     iam_name: "{{ policy_file.path | regex_replace('^.*/|\\.json$', '') }}"
+#     iam_name: "{{ iam_group.iam_group.group.group_name }}"
+
+- name: Set policy name variable
+  set_fact:
+    policy_name: "{{ policy_file.path | regex_replace('^.*/|\\.json$', '') }}"
+
+- name: Display policy_name
+  ansible.builtin.debug:
+    msg: "{{ policy_name }}"
+
+- name: Obtain an existing policy ARN from the policy name
+  command: aws iam list-policies --query "Policies[?PolicyName=='{{ policy_name}}'].Arn" --output text
+  # command: aws iam list-policies --query "Policies[?PolicyName=='{{ policy_file.path | regex_replace('^.*/|\\.json$', '') }}'].Arn" --output text
+  register: policy_arn_output
+  changed_when: false 
+  ignore_errors: true
+
+# The iam.policy module is bogus.  It does not permit the creation of unlinked IAM policies.  Use the shell command instead.
+- name: Create an unlinked IAM policy using the shell command if it does not already exist
+  command: aws iam create-policy --policy-name "{{ policy_name }}" --policy-document file://"{{ playbook_dir }}/{{ policy_file.path }}"
+  register: policy_creation_output
+  changed_when: policy_creation_output.stdout.policy.Arn is defined
+  # failed_when: policy_creation_output.stdout.policy.Arn is not defined
+  when: policy_arn_output.stdout == ""
+
+- name: Determine how many policy versions exist for an existing IAM policy
+  command: aws iam list-policy-versions --policy-arn "{{ policy_arn_output.stdout }}" --query "length(Versions)" --output text
+  register: policy_version_count
+  changed_when: false
+  when: policy_arn_output.stdout is defined and policy_arn_output.stdout != ""
+
+- name: If the policy version count is 5 or more, identify the oldest policy version
+  command: aws iam list-policy-versions --policy-arn "{{ policy_arn_output.stdout }}" --query "sort_by(Versions, &CreateDate)[0].VersionId" --output text
+  register: oldest_policy_version
+  changed_when: false
+  when: policy_version_count.stdout is defined and policy_version_count.stdout | int > 4
+
+- name: Delete the oldest policy version if necessary to make room for a new policy version
+  command: aws iam delete-policy-version --policy-arn "{{ policy_arn_output.stdout }}" --version-id "{{ oldest_policy_version.stdout }}"
+  when: oldest_policy_version.stdout is defined and oldest_policy_version.stdout != ""
+
+- name: Update an existing IAM policy with a new version based on the json policy file in site-playbooks\aws-iam-policies
+  command: aws iam create-policy-version --policy-arn "{{ policy_arn_output.stdout }}" --policy-document file://"{{ playbook_dir }}/{{ policy_file.path }}"
+  register: policy_update_output
+  when: policy_arn_output.stdout is defined and policy_arn_output.stdout != ""
+
+- name: Convert policy_update_output from json to an Ansible dictionary
+  ansible.builtin.set_fact:
+    policy_update_output_dict: "{{ policy_update_output.stdout | from_json }}"
+  when: policy_arn_output.stdout is defined and policy_arn_output.stdout != ""
+
+- name: If a new IAM policy version needed to be created, set it as the default
+  command: aws iam set-default-policy-version --policy-arn "{{ policy_arn_output.stdout }}" --version-id {{ policy_update_output_dict.PolicyVersion.VersionId }}
+  when: policy_update_output_dict.PolicyVersion.VersionId is defined and policy_update_output_dict.PolicyVersion.VersionId != ""
+

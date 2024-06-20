@@ -1,0 +1,82 @@
+---
+- name: Close HTTPS firewall ports to prepare for firewall config
+  shell: >
+    aws lightsail close-instance-public-ports \
+    --instance-name "{{ item.aws_instance_name }}" \
+    --port-info "fromPort=443,protocol=tcp,toPort=443,cidrs=0.0.0.0/0"
+    --region "{{ item.aws_region }}"
+
+- name: Close HTTP firewall ports to prepare for firewall config
+  shell: >
+    aws lightsail close-instance-public-ports \
+    --instance-name "{{ item.aws_instance_name }}" \
+    --port-info "fromPort=80,protocol=tcp,toPort=80,cidrs=0.0.0.0/0"
+    --region "{{ item.aws_region }}"
+
+- name: Close SSH firewall ports to prepare for firewall config
+  shell: >
+    aws lightsail close-instance-public-ports \
+    --instance-name "{{ item.aws_instance_name }}" \
+    --port-info "fromPort=22,protocol=tcp,toPort=22,cidrs=0.0.0.0/0"
+    --region "{{ item.aws_region }}"
+
+- name: Configure HTTPS on the firewall
+  shell: >
+    aws lightsail open-instance-public-ports \
+    --instance-name "{{ item.aws_instance_name }}" \
+    --port-info "fromPort=443,protocol=TCP,toPort=443,cidrs={{ item.aws_https_allowed_networks }}"
+    --region "{{ item.aws_region }}"
+
+- name: Configure HTTP on the firewall
+  shell: >
+    aws lightsail open-instance-public-ports \
+    --instance-name "{{ item.aws_instance_name }}" \
+    --port-info "fromPort=80,protocol=TCP,toPort=80,cidrs={{ item.aws_http_allowed_networks }}"
+    --region "{{ item.aws_region }}"
+
+- name: Configure SSH on the firewall
+  shell: >
+    aws lightsail open-instance-public-ports \
+    --instance-name "{{ item.aws_instance_name }}" \
+    --port-info "fromPort=22,protocol=TCP,toPort=22,cidrs={{ item.aws_ssh_allowed_networks }},cidrListAliases=lightsail-connect"
+    --region "{{ item.aws_region }}"
+
+- name: Configure nonstandard port on the firewall
+  shell: >
+    aws lightsail open-instance-public-ports \
+    --instance-name "{{ item.aws_instance_name }}" \
+    --port-info "fromPort={{ item.aws_other_port }},protocol=TCP,toPort={{ item.aws_other_port }},cidrs={{ item.aws_http_allowed_networks }}"
+    --region "{{ item.aws_region }}"
+  when: item.aws_instance_name is defined
+  ignore_errors: yes
+
+- name: Allocate a static IPV4 address using the name of the lightsail instance
+  shell: >
+    aws lightsail allocate-static-ip \
+    --static-ip-name "{{ item.aws_instance_name }}-ip" 
+    --region "{{ item.aws_region }}"
+  ignore_errors: yes
+
+- name: Attach the static IPV4 address to the new Lightsail instance
+  shell: >
+    aws lightsail attach-static-ip \
+    --static-ip-name "{{ item.aws_instance_name }}-ip" \
+    --instance-name "{{ item.aws_instance_name }}"
+    --region "{{ item.aws_region }}"
+  ignore_errors: yes
+
+- name: Determine the IP address of the new Lightsail instance
+  community.aws.lightsail:
+    aws_access_key_id: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
+    aws_secret_key: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+    region: "{{ item.aws_region }}"
+    name: "{{ item.aws_instance_name }}"
+    zone: "{{ item.aws_availability_zone }}"
+    blueprint_id: "{{ item.aws_blueprint_id }}"
+    bundle_id: "{{ item.aws_bundle_id }}"
+  register: new_lightsail_instance
+
+- name: Display the IP address of the new instance
+  debug:
+    var: new_lightsail_instance.instance.public_ip_address
+

@@ -1,0 +1,69 @@
+---
+- name: Query Lightsail instances
+  shell: >
+    aws lightsail get-instance \
+    --instance-name "{{ item.aws_instance_name }}"
+    --region "{{ item.aws_region }}"
+  register: lightsail_instances
+  ignore_errors: yes
+
+- name: Check if the instance with this name already exists
+  debug:
+    msg: "Instance {{ item.aws_instance_name }} already exists"
+  register: aws_instance_exists
+  when: lightsail_instances is defined and lightsail_instances.rc == 0
+
+- name: Create a new Lightsail instance using aws cli (the community.aws.lightsail module does not yet support this)
+  shell: >
+    aws lightsail create-instances-from-snapshot \
+    --instance-snapshot-name "{{ item.lightsail_snapshot_name }}" \
+    --availability-zone "{{ item.aws_availability_zone }}" \
+    --instance-names "{{ item.aws_instance_name }}" \
+    --bundle-id "{{ item.aws_bundle_id }}" \
+    --key-pair-name "{{ item.aws_key_pair_name }}" \
+    --query 'operations[].id' \
+    --output 'text' \
+    --user-data "{{ aws_user_data }}"
+    --region "{{ item.aws_region }}"
+  register: operation_id
+  when: lightsail_instances is not defined or lightsail_instances.rc !=0
+
+- name: Wait for the new instance to be running
+  shell: aws lightsail get-instance --region "{{ item.aws_region }}" --instance-name "{{ item.aws_instance_name }}" --query "instance.state.name" --output text
+  register: instance_state
+  until: instance_state.stdout == "running"
+  retries: 30
+  delay: 10
+
+- name: Check the Lightsail instance for a name tag
+  shell: >
+    aws lightsail get-instance --instance-name "{{ item.aws_instance_name }}" | jq '.instance.tags[] | select(.key == "Name").value'
+  register: name_value
+
+- name: Notify of Name tag value change
+  debug:
+    msg: "Name tag value is {{ name_value.stdout }} and is being set to {{ item.aws_instance_name }}"
+    
+- name: Tag the new Lightsail instance with its name
+  shell: >
+    aws lightsail tag-resource \
+    --resource-name "{{ item.aws_instance_name }}" \
+    --tags "key=Name,value={{ item.aws_instance_name }}" 
+    --region "{{ item.aws_region }}"
+
+- name: Check the Lightsail instance for an owner tag
+  shell: >
+    aws lightsail get-instance --instance-name "{{ item.aws_instance_name }}" | jq '.instance.tags[] | select(.key == "Owner").value'      
+  register: owner_value
+
+- name: Notify of Owner tag value change
+  debug:
+    msg: "Owner tag value is {{ owner_value.stdout }} and is being set to {{ item.aws_owner }}"
+
+- name: Tag the new Lightsail instance with its owner
+  shell: >
+    aws lightsail tag-resource \
+    --resource-name "{{ item.aws_instance_name }}" \
+    --tags "key=Owner,value={{ item.aws_owner }}"
+    --region "{{ item.aws_region }}"
+

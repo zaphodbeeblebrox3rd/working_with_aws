@@ -26,20 +26,38 @@
             "Sid": "TranscribeS3AccessStatement",
             "Effect": "Allow",
             "Action": [
-                "s3:GetObject",
+                "s3:ListAllMyBuckets",
                 "s3:ListBucket",
                 "s3:GetBucketLocation",
                 "s3:PutEncryptionConfiguration",
-                "s3:PutObject",
-                "s3:DeleteObject",
+                "s3:DeleteObjectVersion",
                 "s3:GetObjectVersion",
+                "s3:GetEncryptionConfiguration",
+                "s3:GetBucketVersioning",
+                "s3:GetBucketAcl",
+                "s3:GetBucketPolicy",
+                "s3:GetBucketLogging",
+                "s3:GetBucketCors",
+                "s3:GetBucketWebsite",
+                "s3:GetBucketNotification",
+                "s3:GetBucketObjectLockConfiguration",
+                "s3:GetBucketTagging",
+                "s3:GetBucketPublicAccessBlock",
+                "s3:GetBucketOwnershipControls",
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
                 "kms:GenerateDataKey*",
-                "kms:DescribeKey"
+                "kms:DescribeKey",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject"
             ],
-            "Resource": "arn:aws:s3:::<enter bucket name>"
+            "Resource": [
+                "arn:aws:s3:::<your_bucket_name>",
+                "arn:aws:s3:::<your_bucket_name>/*",
+                "arn:aws:s3:::<your_bucket_name>/*/*"
+            ]
         },
         {
             "Sid": "TranscribeLoggingAccessStatement",
@@ -89,21 +107,6 @@
                 "s3:DeleteObjectTagging"
             ],
             "Resource": "*"
-        },
-        {
-            "Sid": "TranscribeDenyServiceControlledS3",
-            "Effect": "Deny",
-            "Action": [
-                "transcribe:StartTranscriptionJob",
-                "translate:StartTextTranslationJob"
-            ],
-            "Resource": "*",
-            "Condition": {
-                "StringEquals": {
-                    "s3:ResourceTag/TranscriptionControlled": "true",
-                    "s3:ResourceTag/TranslationControlled": "true"
-                }
-            }
         }
     ]
 }

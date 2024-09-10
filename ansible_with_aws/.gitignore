@@ -1,0 +1,5 @@
+.vault_pass
+*.retry
+.DS_Store
+*.rpmnew
+ansible.cfg

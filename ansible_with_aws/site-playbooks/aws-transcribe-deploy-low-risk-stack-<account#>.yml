@@ -1,0 +1,25 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - vars/aws_credentials.yml
+  vars:
+    - aws_account_id: <your AWS account number>
+    - cloudformation_template_path: files/aws-transcribe-low-risk-rollup.yaml
+    - cloudformation_stack_name: AWS-Transcribe-LowRisk-Stack-<your AWS account number>
+  roles: 
+    - aws-cloudformation-deploy
+  tasks:
+    - name: Find IAM policy JSON files
+      ansible.builtin.find:
+        paths: aws-iam-policies
+        patterns: '*LowRisk-Users.json'
+      register: json_files
+
+    - name: Deploy each IAM policy
+      include_role:
+        name: aws-iam-policy
+      loop: "{{ json_files.files }}"
+      loop_control:
+        loop_var: policy_file
+      

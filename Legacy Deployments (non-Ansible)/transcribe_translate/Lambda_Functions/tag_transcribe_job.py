@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Eric Hoy
+# Licensed under the MIT License
+
 import boto3
 import json
 

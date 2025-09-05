@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2024 Eric Hoy
+# Licensed under the MIT License
+
 import argparse
 import os
 import shutil

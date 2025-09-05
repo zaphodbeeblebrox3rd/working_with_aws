@@ -1,68 +1,157 @@
 # Ansible with AWS
 
-This repository contains Ansible roles for provisioning and configuring a variety of AWS resources.  Working in AWS using Ansible is not easy, so this repository is intended to help you get started.
-
+This repository contains Ansible roles for provisioning and configuring a variety of AWS resources. Working with AWS using Ansible can be complex, so this repository provides a structured approach to managing AWS infrastructure as code.
 
 ## Overview
 
-The ansible_with_aws codebase provides Ansible roles and playbooks for managing various AWS services. It includes examples and configurations for IAM policies, EC2 provisioning, CloudFormation deployments, and more.
+The `ansible_with_aws` codebase provides five comprehensive Ansible roles for managing various AWS services:
 
+- **aws-iam-policy**: Create and manage AWS IAM policies
+- **aws-ec2-provision**: Provision and configure EC2 instances
+- **aws-cloudformation-deploy**: Deploy resources using AWS CloudFormation templates
+- **aws-lightsail**: Manage AWS Lightsail instances
+- **aws-rds**: Provision and configure RDS database instances
 
 ## Prerequisites
 
-- Ansible 2.9 or later
-- Python 3.6 or later
-- Boto3 library for Python
-- AWS CLI installed
-- AWS credentials
+### Python Environment Setup
 
+1. **Python 3.11 or later** (recommended)
+2. **Virtual Environment** (recommended):
+   ```bash
+   python3 -m venv ansible-aws-env
+   source ansible-aws-env/bin/activate  # On Windows: ansible-aws-env\Scripts\activate
+   ```
 
-## Key Components
+3. **Install Required Python Packages**:
+   ```bash
+   pip install ansible boto3 botocore
+   ```
 
-**IAM Policies**: Automate the creation and management of AWS IAM policies.
+### AWS Account Setup
 
-**EC2 Provisioning**: Configure and launch EC2 instances with specific settings.
+1. **AWS CLI Installation**:
+   ```bash
+   # macOS
+   brew install awscli
+   
+   # Or using pip
+   pip install awscli
+   ```
 
-**CloudFormation**: Deploy resources using AWS CloudFormation templates.
+2. **AWS Credentials Configuration**:
+   ```bash
+   aws configure
+   ```
+   Provide your:
+   - AWS Access Key ID
+   - AWS Secret Access Key
+   - Default region name
+   - Default output format (json recommended)
 
-**Lightsail**: Manage AWS Lightsail instances.
+3. **IAM User Requirements**:
+   - Create an IAM user with appropriate permissions for the services you plan to manage
+   - Attach policies that grant necessary permissions for EC2, IAM, CloudFormation, Lightsail, and RDS operations
+   - Ensure the user has programmatic access enabled
 
+4. **AWS Account Number**:
+   - Note your AWS account number (found in the AWS Management Console top-right corner)
+   - This will be used in playbook variable files
 
-## Configuration
+## Ansible Roles
 
-Ensure your AWS credentials are set up correctly and accessible to Ansible. You may need to configure specific variables in the playbooks to match your AWS environment.
+### aws-iam-policy
+Manages AWS IAM policies and policy attachments. This role can:
+- Create custom IAM policies from JSON templates
+- Attach policies to users, groups, or roles
+- Validate AWS credentials before operations
 
+### aws-ec2-provision
+Provisions and configures EC2 instances with:
+- Custom instance types and AMI selection
+- Security group configuration
+- Key pair management
+- Tagging and metadata setup
 
+### aws-cloudformation-deploy
+Deploys AWS resources using CloudFormation templates:
+- Stack creation and updates
+- Parameter management
+- Stack status monitoring
+- Rollback capabilities
+
+### aws-lightsail
+Manages AWS Lightsail instances including:
+- Instance creation and configuration
+- Networking setup (VPC, subnets, security groups)
+- Instance state management
+- Resource tagging
+
+### aws-rds
+Provisions and manages RDS database instances:
+- Database engine selection (MySQL, PostgreSQL, etc.)
+- Instance sizing and configuration
+- Security group and subnet group setup
+- Backup and maintenance window configuration
 
 ## Usage
 
-Navigate to the site-playbooks directory to find playbooks for deploying specific AWS services. Modify the variables in the playbook as needed and run the playbook using the following command:
+### Running Playbooks
+
+1. **Navigate to the site-playbooks directory**:
+   ```bash
+   cd site-playbooks
+   ```
+
+2. **Configure Variables**:
+   - Copy and modify the appropriate variable files in the `vars/` directory
+   - Update account-specific variables (replace `<account#>` with your account number)
+   - Configure AWS credentials in `vars/aws_credentials.yml`
+
+3. **Run a Playbook**:
+   ```bash
+   ansible-playbook -i inventory <playbook-name>.yml
+   ```
+
+### Example Playbook Execution
+
+```bash
+# Deploy IAM policies
+ansible-playbook -i inventory aws-iam-deploy-s3-policy-123456789.yml
+
+# Provision EC2 instances
+ansible-playbook -i inventory aws-ec2-account-123456789.yml
+
+# Deploy CloudFormation stack
+ansible-playbook -i inventory aws-cloudformation-wrapper.yml
+```
+
+### Variable Configuration
+
+Each playbook uses variables defined in the `vars/` directory:
+- `aws_credentials.yml`: AWS authentication settings
+- `aws_ec2_<account#>.yaml`: EC2-specific configuration
+- `aws_lightsail_<account#>.yaml`: Lightsail configuration
+- `aws_rds.yaml`: RDS database settings
+- `aws_security_groups_<account#>.yaml`: Security group definitions
+
+## Directory Structure
 
 ```
-ansible-playbook <playbook-name>.yml
+ansible_with_aws/
+├── roles/                    # Ansible roles
+│   ├── aws-iam-policy/      # IAM policy management
+│   ├── aws-ec2-provision/   # EC2 instance provisioning
+│   ├── aws-cloudformation-deploy/  # CloudFormation deployments
+│   ├── aws-lightsail/       # Lightsail management
+│   └── aws-rds/            # RDS database management
+├── site-playbooks/         # Main playbooks
+│   ├── vars/               # Variable files
+│   ├── aws-iam-policies/   # IAM policy JSON templates
+│   └── files/              # Additional files
+└── inventory/              # Ansible inventory files
 ```
-
-### Transcribe Low Risk Stack
-
-This approach to transcription and translation was done with the following mantra: "Upload/Download".  Users can upload their media files and then download the output with no fussing over job configuration, and with very little access (S3 only) to the AWS Console.  
-
-To deploy the Transcribe Low Risk Stack, you need to have the AWS account number for the account you want to deploy to.  You also need an IAM User in the AWS Account that the Ansible controller will use to deploy the stack.  You can find the AWS account number by going to the AWS Management Console and looking at the account ID in the top right corner.  
-
-The stack allows you to assign all users to a single SSO-Linked IAM role, which is ideally linked to a group in your Identity Management System.  The IAM role is granted access to read and write to all S3 buckets in the account, and it depends on bucket policies to deny access to all but the lambda functions, the user, and optionally the IAM user for Ansible.  
-
-Users will log into the AWS Console, launching an EventBridge trigger which targets a lambda function to provision an S3 bucket with a dynamically created bucket policy. On upload of a media file to the Audio_Files prefix in the S3 bucket, an S3 event is triggered which launches the lambda function that orchestrates the transcription job with output to the Transcription_Output prefix in the user's bucket. 
-
-Another lambda function converts the json output to a Word document for an easily readable transcript.  The user can then download the document from their bucket.
-
-The same goes for translation, which accepts plaintext input files in the Translation_Input prefix and outputs to the Translation_Output prefix in json and Word document formats.  
-
-Additionally, the stack includes a lambda function which provides an easily readable log of AWS Console logins.
-
-The lambda functions are mostly designed to be inexpensive and fast, with the intention of scaling to handle many users and many jobs.  The only expensive function is the conversion of json to Word document format.  The functions are designed to be fault-tolerant, with a retry strategy of 3 attempts with an exponential backoff.  The lambda function also includes a custom resource to tag the S3 bucket with the user's identifying info.  The same approach is applied to the Transcribe jobs to allow for cost-tracking by tag for the S3 and Transcribe costs.  Unfortunately AWS does not support this approach with Translate, so cost tracking Translate services is unattainable at this time.
-
-
-
 
 ## Support
 
-You are on your own.  No support is provided.
+This repository is provided as-is for educational and reference purposes. No formal support is provided.
